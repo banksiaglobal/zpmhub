@@ -1,0 +1,17 @@
+{
+  "files.associations": {
+    "Dockerfile*": "dockerfile",
+  },
+  "objectscript.conn": {
+    "active": true,
+    "username": "_SYSTEM",
+    "password": "111",
+    "ns": "USER",
+    "host": "localhost",
+    "port": 52773,
+    "links": {
+      "Swagger spec": "http://${host}:${port}/registry/_spec",
+      "All Packages": "http://${host}:${port}/registry/packages/-/all"
+    }
+  }
+}
