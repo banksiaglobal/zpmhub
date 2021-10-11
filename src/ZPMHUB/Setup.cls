@@ -39,8 +39,7 @@ ClassMethod Setup(token As %String = "", verbose As %Boolean = 0) As %Status
         set Setup.Token=email
     } else {
         if '..CheckEmail(Setup.Server,email) {
-            write !,!,"This email is not registered on ",Setup.Server
-            quit $$$OK
+            quit $$$ERROR($$$GeneralError,"This email is not registered on "_Setup.Server)
         }
         set emailChanged=existingSetup.Email'=email
         set Setup.Email=email
@@ -53,8 +52,7 @@ ClassMethod Setup(token As %String = "", verbose As %Boolean = 0) As %Status
             use 0:(:"-S" ) 
             set token=..GetToken(Setup.Server,Setup.Email,password)
             if token="" {
-                write !,!,"This password is invalid. Please try again."
-                quit $$$OK
+                quit $$$ERROR($$$GeneralError,"This password is invalid. Please try again.")
             }
             set Setup.Token=token
             write !,!,"We created a new token for this environment:",!,token
