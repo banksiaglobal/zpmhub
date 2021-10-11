@@ -13,7 +13,7 @@
       <Packaging>module</Packaging>
       <SourcesRoot>src</SourcesRoot>
       <Resource Name="ZPMHUB.PKG"/>
-      <Invoke Class="ZPMHUB.Setup" Method="Setup">
+      <Invoke Class="ZPMHUB.Setup" Method="Setup" CheckStatus="true">
         <Arg>${token}</Arg>
         <Arg>${verbose}</Arg>
       </Invoke>
