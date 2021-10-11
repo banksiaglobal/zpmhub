@@ -12,7 +12,7 @@ Property Server As %String [ InitialExpression = "https://zpmhub.com/" ];
 
 Property Email As %String;
 
-Property Token As %String;
+Property Token As %String(MAXLEN = 100);
 
 Property EnvironmentName As %String;
 
@@ -33,8 +33,33 @@ ClassMethod Setup(token As %String = "", verbose As %Boolean = 0) As %Status
     write "Enter new values or press Enter to use defaults provided in []",!
 
     set Setup.Server=..ReadValue("Enter ZpmHub server address",existingSetup.Server)
-    set Setup.Email=..ReadValue("Enter ZpmHub email",existingSetup.Email)
-    set Setup.Token=..ReadValue("Enter ZpmHub password","")
+    set email=..ReadValue("Enter ZpmHub email or token", existingSetup.Email)
+    if ..CheckToken(Setup.Server,email) {
+        set Setup.Email=email
+        set Setup.Token=email
+    } else {
+        if '..CheckEmail(Setup.Server,email) {
+            write !,!,"This email is not registered on ",Setup.Server
+            quit $$$OK
+        }
+        set emailChanged=existingSetup.Email'=email
+        set Setup.Email=email
+        if existingSetup.Token'="",'emailChanged,..CheckToken(Setup.Server,existingSetup.Token) {
+            set Setup.Token=existingSetup.Token
+        }
+        else {
+            use 0:(:"+S" ) //Secret mode for Read https://docs.intersystems.com/irislatest/csp/docbook/DocBook.UI.Page.cls?KEY=GIOD_termio#GIOD_termio_lettercodes
+            set password=..ReadValue("Enter ZpmHub password","")
+            use 0:(:"-S" ) 
+            set token=..GetToken(Setup.Server,Setup.Email,password)
+            if token="" {
+                write !,!,"This password is invalid. Please try again."
+                quit $$$OK
+            }
+            set Setup.Token=token
+            write !,!,"We created a new token for this environment:",!,token
+        }
+    }
     set monitoring=..ReadValue("Do you want to enable ZpmHub monitoring of this namespace? (Y/N)","Y")
     set Setup.IsMonitoringEnabled=$e($zcvt(monitoring,"U"))'="N"
     if Setup.IsMonitoringEnabled {
@@ -45,7 +70,10 @@ ClassMethod Setup(token As %String = "", verbose As %Boolean = 0) As %Status
         set Setup.ServerName=..ReadValue("Enter a name for this IRIS instance",serverName)
         $$$QuitOnError(..AddMonitorTask())
     }
+    set repoCommand="repo -r -n registry -url "_Setup.Server_"/api/ -user ""Token"" -pass """_Setup.Token_""""
+    $$$QuitOnError(##class(%ZPM.PackageManager).Shell(repoCommand))
     $$$QuitOnError(Setup.%Save(0))
+    $$$QuitOnError(##class(ZPMHUB.Task).SendSingleEnvironment($znspace))
     quit $$$OK
 }
 
@@ -90,6 +118,44 @@ ClassMethod GetSSLConfiguration() As %String
         Do ##class(Security.SSLConfigs).Create(host)
     }
     Return host
+}
+
+ClassMethod CheckEmail(server As %String, email As %String) As %Boolean
+{
+  quit 1
+}
+
+ClassMethod CheckToken(server As %String, token As %String) As %Status
+{
+    set config=##class(%ZPM.PackageManager.Client.REST.PackageManagerClient).%New()
+    set config.Location=server_"api/auth/check"
+    set config.Username="token"
+    set config.Password=token
+
+    Set tRequest = config.GetHttpRequest()
+    
+    Set tSC = tRequest.Get($$$URLENCODE(tRequest.Location))
+    If ($$$ISERR(tSC) || (tRequest.HttpResponse.StatusCode'=200)) {
+        quit $$$ERROR($$$GeneralError,"Token is invalid")
+    }
+    quit $$$OK
+}
+
+ClassMethod GetToken(server As %String, email As %String, password As %String) As %String
+{
+    set config=##class(%ZPM.PackageManager.Client.REST.PackageManagerClient).%New()
+    set config.Location=server_"api/auth/token"
+    set config.Username=$tr(email,"@","%")
+    set config.Password=password
+
+    Set tRequest = config.GetHttpRequest()
+    
+    Set tSC = tRequest.Post($$$URLENCODE(tRequest.Location))
+    If ($$$ISERR(tSC) || (tRequest.HttpResponse.StatusCode'=200)) {
+        quit ""
+    }
+    set jsonResponse={}.%FromJSON(tRequest.HttpResponse.Data)
+    quit jsonResponse.token
 }
 
 Storage Default
