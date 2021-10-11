@@ -4,21 +4,16 @@
     <Module>
       <Name>zpmhub</Name>
       <Description>ZpmHub.com client</Description>
-      <Version>0.1.0-dev</Version>
+      <Version>0.1.0</Version>
       <Author>
         <Organization>Banksia Global</Organization>
         <CopyrightDate>2021</CopyrightDate>
         <License>MIT</License>
       </Author>
       <Packaging>module</Packaging>
-      <Dependencies>
-        <ModuleReference>
-          <Name>zpm</Name>
-        </ModuleReference>
-      </Dependencies>
       <SourcesRoot>src</SourcesRoot>
       <Resource Name="ZPMHUB.PKG"/>
-      <Invoke Class="ZPMHUB.Settings" Method="Setup">
+      <Invoke Class="ZPMHUB.Setup" Method="Setup">
         <Arg>${token}</Arg>
         <Arg>${verbose}</Arg>
       </Invoke>

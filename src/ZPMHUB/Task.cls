@@ -38,12 +38,11 @@ ClassMethod SendSingleEnvironment(ns As %String) As %Status
     set jsonData=..GetSingleEnvironmentData(ns)
 
     set config=##class(%ZPM.PackageManager.Client.REST.PackageManagerClient).%New()
-    set config.Location=Setup.Server_"environment/"
-    set config.Username="test" //$tr(Setup.Email,"@","%")
-    set config.Password="test" //Setup.Token
+    set config.Location=Setup.Server_"api/environment/"
+    set config.Username="token"
+    set config.Password=Setup.Token
 
     Set tRequest = config.GetHttpRequest()
-    w !,tRequest.Location,!
     
     Set tRequest.ContentType = "application/json"
     Do jsonData.%ToJSON(tRequest.EntityBody) 
