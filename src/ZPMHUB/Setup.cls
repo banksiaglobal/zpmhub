@@ -35,7 +35,6 @@ ClassMethod Setup(token As %String = "null", verbose As %Boolean = 0) As %Status
         set Setup.Server=..ReadValue("Enter ZpmHub server address",existingSetup.Server)
         set email=..ReadValue("Enter ZpmHub email or token", existingSetup.Email)
     } else {
-        b
         set email=token
     }
     if ..CheckToken(Setup.Server,email) {
