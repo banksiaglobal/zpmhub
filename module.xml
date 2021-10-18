@@ -3,7 +3,7 @@
   <Document name="zpmhub.ZPM">
     <Module>
       <Name>zpmhub</Name>
-      <Description>ZpmHub.com client</Description>
+      <Description>ZpmHub.com client. Managed hosting for your private and public ZPM modules by Banksia Global.</Description>
       <Version>0.2.0</Version>
       <Author>
         <Organization>Banksia Global</Organization>
@@ -13,6 +13,7 @@
       <Packaging>module</Packaging>
       <SourcesRoot>src</SourcesRoot>
       <Resource Name="ZPMHUB.PKG"/>
+      <Default Name="token" Value="null" />
       <Invoke Class="ZPMHUB.Setup" Method="Setup" CheckStatus="true">
         <Arg>${token}</Arg>
         <Arg>${verbose}</Arg>

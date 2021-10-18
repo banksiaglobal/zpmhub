@@ -20,7 +20,7 @@ Property ServerName As %String;
 
 Property IsMonitoringEnabled As %Boolean;
 
-ClassMethod Setup(token As %String = "", verbose As %Boolean = 0) As %Status
+ClassMethod Setup(token As %String = "null", verbose As %Boolean = 0) As %Status
 {
     if '##class(%Dictionary.ClassDefinition).%ExistsId("%ZPM.PackageManager") {
         quit $$$ERROR($$$GeneralError,"You need to install ZPM Package Manager for ZpmHub to work")
@@ -29,11 +29,15 @@ ClassMethod Setup(token As %String = "", verbose As %Boolean = 0) As %Status
     else  set Setup=..%New()
     set existingSetup=Setup
     if ('existingSetup) && $data(^%ZPMHUB) set existingSetup=..%OpenId($order(^%ZPMHUB("")))
-    write !,!,"Welcome to ZpmHub! We need to ask you a few questions to get going.",!
-    write "Enter new values or press Enter to use defaults provided in []",!
-
-    set Setup.Server=..ReadValue("Enter ZpmHub server address",existingSetup.Server)
-    set email=..ReadValue("Enter ZpmHub email or token", existingSetup.Email)
+    if (token="null") {
+        write !,!,"Welcome to ZpmHub! We need to ask you a few questions to get going.",!
+        write "Enter new values or press Enter to use defaults provided in []",!
+        set Setup.Server=..ReadValue("Enter ZpmHub server address",existingSetup.Server)
+        set email=..ReadValue("Enter ZpmHub email or token", existingSetup.Email)
+    } else {
+        b
+        set email=token
+    }
     if ..CheckToken(Setup.Server,email) {
         set Setup.Email=email
         set Setup.Token=email
