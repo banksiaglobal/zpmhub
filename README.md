@@ -44,4 +44,4 @@ It will ask you to enter user name and password, and also if you want to enable 
 
 # Usage
 
-After installing zpmhub package, your remote repositoru will be changed to ZpmHub's one. You can use standard ZPM comands like "zpm publish" and "zpm install" to manage your deployments. Refer to [ZPM documentation](https://github.com/intersystems-community/zpm) for more information.
+After installing zpmhub package, your remote repository will be changed to ZpmHub's one. You can use standard ZPM comands like "zpm publish" and "zpm install" to manage your deployments. Refer to [ZPM documentation](https://github.com/intersystems-community/zpm) for more information.
