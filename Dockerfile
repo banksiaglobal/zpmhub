@@ -3,8 +3,6 @@ FROM intersystemsdc/iris-community:2021.1.0.215.3-zpm
 
 USER root
 
-COPY zpm-registry.yaml /usr/irissys/
-
 WORKDIR /opt/zpm
 RUN chown ${ISC_PACKAGE_MGRUSER}:${ISC_PACKAGE_IRISGROUP} .
 
