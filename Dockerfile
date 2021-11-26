@@ -1,5 +1,5 @@
 #FROM store/intersystems/iris-community:2020.1.0.215.0
-FROM intersystemsdc/iris-community:2020.4.0.524.0-zpm
+FROM intersystemsdc/iris-community:2021.1.0.215.3-zpm
 
 USER root
 
@@ -11,7 +11,6 @@ RUN chown ${ISC_PACKAGE_MGRUSER}:${ISC_PACKAGE_IRISGROUP} .
 USER irisowner
 
 COPY  Installer.cls .
-COPY  SQLPriv.xml .
 COPY  src src
 COPY irissession.sh /
 SHELL ["/irissession.sh"]
