@@ -42,6 +42,20 @@ Now you can install ZpmHub. In terminal, issue the following command:
 
 It will ask you to enter user name and password, and also if you want to enable monitoring for the current environment. 
 
+## Using docker-compose
+
+Alternatively, you can use Docker containers to develop and test zpmhub client. First, bring up a container with command
+    
+    docker-compose up -d
+    
+Then, go to terminal with command
+
+    docker-compose exec iris iris session iris
+
+And finally, load zpmhub package from source with 
+
+    USER> zpm "load /irisdev/app"
+
 # Usage
 
 After installing zpmhub package, your remote repository will be changed to ZpmHub's one. You can use standard ZPM comands like "zpm publish" and "zpm install" to manage your deployments. Refer to [ZPM documentation](https://github.com/intersystems-community/zpm) for more information.
