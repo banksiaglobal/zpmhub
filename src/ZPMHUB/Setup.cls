@@ -49,7 +49,7 @@ ClassMethod Setup(token As %String = "null", verbose As %Boolean = 0) As %Status
             set password=..ReadValue("Enter your password", "")
             use 0:(:"-S" ) 
             set orgName=..ReadValue("Enter your company name", "")
-            set org=..ReadValue("Enter your sompany short name. This name will be used in URL like https://zpmhub.com/browse/yourorg and should only contain lowercase letters.", "")
+            set org=..ReadValue("Enter your company short name. This name will be used in URL like https://zpmhub.com/browse/yourorg and should only contain lowercase letters.", "")
             $$$QuitOnError(..Register(Setup.Server,email,password,name,orgName,org))
             write !,!,"Registered  "_email_" successfully.",!
         }
