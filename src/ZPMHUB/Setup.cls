@@ -37,21 +37,29 @@ ClassMethod Setup(token As %String = "null", verbose As %Boolean = 0) As %Status
     } else {
         set email=token
     }
-    if ..CheckToken(Setup.Server,email) {
+    if ..CheckToken(Setup.Server,email) { 
         set Setup.Email=email
         set Setup.Token=email
     } else {
         if '..CheckEmail(Setup.Server,email) {
-            quit $$$ERROR($$$GeneralError,"This email is not registered on "_Setup.Server)
+            set create=..ReadValue("This email is not registered on "_Setup.Server_"."_$c(13,10)_"Do you want to register a new user?", "Y")
+            if $e($zcvt(create,"U"))="N" quit $$$ERROR($$$GeneralError,"This email is not registered on "_Setup.Server)
+            set name=..ReadValue("Enter your full name", "")
+            use 0:(:"+S" ) //Secret mode for Read https://docs.intersystems.com/irislatest/csp/docbook/DocBook.UI.Page.cls?KEY=GIOD_termio#GIOD_termio_lettercodes
+            set password=..ReadValue("Enter your password", "")
+            use 0:(:"-S" ) 
+            set orgName=..ReadValue("Enter your company name", "")
+            set org=..ReadValue("Enter your sompany short name. This name will be used in URL like https://zpmhub.com/browse/yourorg and should only contain lowercase letters.", "")
+            $$$QuitOnError(..Register(Setup.Server,email,password,name,orgName,org))
+            write !,!,"Registered  "_email_" successfully.",!
         }
         set emailChanged=existingSetup.Email'=email
         set Setup.Email=email
         if existingSetup.Token'="",'emailChanged,..CheckToken(Setup.Server,existingSetup.Token) {
             set Setup.Token=existingSetup.Token
-        }
-        else {
+        } else {
             use 0:(:"+S" ) //Secret mode for Read https://docs.intersystems.com/irislatest/csp/docbook/DocBook.UI.Page.cls?KEY=GIOD_termio#GIOD_termio_lettercodes
-            set password=..ReadValue("Enter ZpmHub password","")
+            if $g(password)="" set password=..ReadValue("Enter ZpmHub password","")
             use 0:(:"-S" ) 
             set token=..GetToken(Setup.Server,Setup.Email,password)
             if token="" {
@@ -123,10 +131,16 @@ ClassMethod GetSSLConfiguration() As %String
 
 ClassMethod CheckEmail(server As %String, email As %String) As %Boolean
 {
-  quit 1
+    set config=##class(%ZPM.PackageManager.Client.REST.PackageManagerClient).%New()
+    set config.Location=server_"api/auth/checkEmail/"_email
+
+    Set tRequest = config.GetHttpRequest()
+    
+    Set tSC = tRequest.Get($$$URLENCODE(tRequest.Location))
+    Quit tRequest.HttpResponse.StatusCode=200
 }
 
-ClassMethod CheckToken(server As %String, token As %String) As %Status
+ClassMethod CheckToken(server As %String, token As %String) As %Numeric
 {
     set config=##class(%ZPM.PackageManager.Client.REST.PackageManagerClient).%New()
     set config.Location=server_"api/auth/check"
@@ -136,10 +150,7 @@ ClassMethod CheckToken(server As %String, token As %String) As %Status
     Set tRequest = config.GetHttpRequest()
     
     Set tSC = tRequest.Get($$$URLENCODE(tRequest.Location))
-    If ($$$ISERR(tSC) || (tRequest.HttpResponse.StatusCode'=200)) {
-        quit $$$ERROR($$$GeneralError,"Token is invalid")
-    }
-    quit $$$OK
+    Quit tRequest.HttpResponse.StatusCode=200
 }
 
 ClassMethod GetToken(server As %String, email As %String, password As %String) As %String
@@ -157,6 +168,32 @@ ClassMethod GetToken(server As %String, email As %String, password As %String) A
     }
     set jsonResponse={}.%FromJSON(tRequest.HttpResponse.Data)
     quit jsonResponse.token
+}
+
+ClassMethod Register(server As %String, email As %String, password As %String, name, orgName, org) As %Status
+{
+    set config=##class(%ZPM.PackageManager.Client.REST.PackageManagerClient).%New()
+    set config.Location=server_"api/auth/sign-up"
+
+    Set tRequest = config.GetHttpRequest()
+
+    set body={
+        "name":(name),
+        "email":(email),
+        "password":(password),
+        "company":(orgName),
+        "companyCode":(org),
+        "agreements":true
+    }
+
+    Do tRequest.EntityBody.Write(body.%ToJSON())
+    
+    Set tSC = tRequest.Post($$$URLENCODE(tRequest.Location))
+    If ($$$ISERR(tSC) || (tRequest.HttpResponse.StatusCode'=200)) {
+        set jsonResponse={}.%FromJSON(tRequest.HttpResponse.Data)
+        quit $$$ERROR(5001,jsonResponse.summary)
+    }
+    quit $$$OK
 }
 
 Storage Default
