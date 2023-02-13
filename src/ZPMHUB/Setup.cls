@@ -133,11 +133,10 @@ ClassMethod CheckEmail(server As %String, email As %String) As %Boolean
 {
     set config=##class(%ZPM.PackageManager.Client.REST.PackageManagerClient).%New()
     set location=server_"api/auth/checkEmail/"_email
-    Set tRequest = config.GetHttpRequest()
+    Set tRequest = config.GetHttpRequest(location)
     
     Set tSC = tRequest.Get(location)
-    zw tRequest
-    zw tRequest.HttpResponse
+
 
     Quit tRequest.HttpResponse.StatusCode=200
 }
