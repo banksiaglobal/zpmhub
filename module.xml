@@ -4,7 +4,7 @@
     <Module>
       <Name>zpmhub</Name>
       <Description>ZpmHub.com client. Managed hosting for your private and public ZPM modules by Banksia Global.</Description>
-      <Version>0.3.5</Version>
+      <Version>0.3.6</Version>
       <Author>
         <Organization>Banksia Global</Organization>
         <CopyrightDate>2021</CopyrightDate>

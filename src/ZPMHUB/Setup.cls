@@ -150,7 +150,7 @@ ClassMethod CheckToken(server As %String, token As %String) As %Numeric
 
     Set tRequest = config.GetHttpRequest()
     
-    Set tSC = tRequest.Get($$$URLENCODE(tRequest.Location))
+    Set tSC = tRequest.Get(server_"api/auth/check")
     Quit tRequest.HttpResponse.StatusCode=200
 }
 
@@ -163,7 +163,7 @@ ClassMethod GetToken(server As %String, email As %String, password As %String) A
 
     Set tRequest = config.GetHttpRequest()
     
-    Set tSC = tRequest.Post($$$URLENCODE(tRequest.Location))
+    Set tSC = tRequest.Post(server_"api/auth/token")
     If ($$$ISERR(tSC) || (tRequest.HttpResponse.StatusCode'=200)) {
         quit ""
     }
