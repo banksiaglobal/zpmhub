@@ -24,7 +24,7 @@ ClassMethod Setup(token As %String = "null", verbose As %Boolean = 0) As %Status
 {
     if '##class(%Dictionary.ClassDefinition).%ExistsId("%ZPM.PackageManager") {
         quit $$$ERROR($$$GeneralError,"You need to install ZPM Package Manager for ZpmHub to work")
-    }
+    } 
     if ..%ExistsId($ZNspace) set Setup=..%OpenId($ZNspace)
     else  set Setup=..%New()
     set existingSetup=Setup
@@ -189,7 +189,7 @@ ClassMethod Register(server As %String, email As %String, password As %String, n
 
     Do tRequest.EntityBody.Write(body.%ToJSON())
     
-    Set tSC = tRequest.Post($$$URLENCODE(tRequest.Location))
+    Set tSC = tRequest.Post(server_"api/auth/sign-up")
     If ($$$ISERR(tSC) || (tRequest.HttpResponse.StatusCode'=200)) {
         set jsonResponse={}.%FromJSON(tRequest.HttpResponse.Data)
         quit $$$ERROR(5001,jsonResponse.summary)
