@@ -132,11 +132,13 @@ ClassMethod GetSSLConfiguration() As %String
 ClassMethod CheckEmail(server As %String, email As %String) As %Boolean
 {
     set config=##class(%ZPM.PackageManager.Client.REST.PackageManagerClient).%New()
-    set config.Location=server_"api/auth/checkEmail/"_email
-
+    set location=server_"api/auth/checkEmail/"_email
     Set tRequest = config.GetHttpRequest()
     
-    Set tSC = tRequest.Get($$$URLENCODE(tRequest.Location))
+    Set tSC = tRequest.Get(location)
+    zw tRequest
+    zw tRequest.HttpResponse
+
     Quit tRequest.HttpResponse.StatusCode=200
 }
 
