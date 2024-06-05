@@ -11,6 +11,11 @@ Method OnTask() As %Status
   quit $$$OK
 }
 
+ClassMethod IsLegacy() As %Boolean [ CodeMode = expression ]
+{
+$SELECT(##class(%Dictionary.ClassDefinition).%ExistsId("%IPM.Main"): 0, ##class(%Dictionary.ClassDefinition).%ExistsId("%ZPM.PackageManager"): 1)
+}
+
 ClassMethod SendEnvironmentData()
 {
     set ns=""
@@ -29,15 +34,25 @@ ClassMethod SendSingleEnvironment(ns As %String) As %Status
     if '##class(%Dictionary.ClassDefinition).%ExistsId("ZPMHUB.Setup") {
         quit $$$ERROR($$$GeneralError,"ZpmHub class was removed from "+$namespace)
     }
-    if '##class(%Dictionary.ClassDefinition).%ExistsId("%ZPM.PackageManager") {
-        quit $$$ERROR($$$GeneralError,"You need to install ZPM Package Manager for ZpmHub to work")
+    Try {
+        set tIsLegacy = ..IsLegacy()
+    } catch ex {
+        If ex.Name = "<SELECT>" {
+            Return $$$ERROR($$$GeneralError,"You need to install ZPM Package Manager for ZpmHub to work")
+        } else {
+            Return ex.AsStatus()
+        }
     }
     set Setup=##class(ZPMHUB.Setup).%OpenId($Namespace)
     if 'Setup.IsMonitoringEnabled quit $$$OK
 
     set jsonData=..GetSingleEnvironmentData(ns)
 
-    set config=##class(%ZPM.PackageManager.Client.REST.PackageManagerClient).%New()
+    If tIsLegacy {
+        set config=##class(%ZPM.PackageManager.Client.REST.PackageManagerClient).%New()
+    } Else {
+        set config=##class(%IPM.Repo.Remote.PackageService).%New()
+    }
     set config.Location=Setup.Server_"api/environment/"
     set config.Username="token"
     set config.Password=Setup.Token
@@ -64,7 +79,11 @@ ClassMethod GetSingleEnvironmentData(ns As %String) As %Status
     set jsonResult.environmentName=Setup.EnvironmentName
     set jsonResult.serverName=Setup.ServerName
     set jsonResult.namespace=ns
-    $$$QuitOnError(##class(%ZPM.PackageManager).GetListModule(ns,.packageList,0))
+    If ..IsLegacy() {
+        $$$QuitOnError(##class(%ZPM.PackageManager).GetListModule(ns,.packageList,0))
+    } Else {
+        $$$QuitOnError(##class(%IPM.Main).GetListModule(ns,.packageList,0))
+    }
     set package="", jsonResult.packages=[]
     for {
         set package=$order(packageList(package))
