@@ -20,11 +20,22 @@ Property ServerName As %String;
 
 Property IsMonitoringEnabled As %Boolean;
 
+ClassMethod IsLegacy() As %Boolean [ CodeMode = expression ]
+{
+$SELECT(##class(%Dictionary.ClassDefinition).%ExistsId("%IPM.Main"): 0, ##class(%Dictionary.ClassDefinition).%ExistsId("%ZPM.PackageManager"): 1)
+}
+
 ClassMethod Setup(token As %String = "null", verbose As %Boolean = 0) As %Status
 {
-    if '##class(%Dictionary.ClassDefinition).%ExistsId("%ZPM.PackageManager") {
-        quit $$$ERROR($$$GeneralError,"You need to install ZPM Package Manager for ZpmHub to work")
-    } 
+    try {
+        set tIsLegacy = ..IsLegacy()
+    } catch ex {
+        If ex.Name = "<SELECT>" {
+            return $$$ERROR($$$GeneralError,"You need to install ZPM Package Manager for ZpmHub to work")
+        } else {
+            return ex.AsStatus()
+        }
+    }
     if ..%ExistsId($ZNspace) set Setup=..%OpenId($ZNspace)
     else  set Setup=..%New()
     set existingSetup=Setup
@@ -80,7 +91,11 @@ ClassMethod Setup(token As %String = "null", verbose As %Boolean = 0) As %Status
         $$$QuitOnError(..AddMonitorTask())
     }
     set repoCommand="repo -r -n registry -url "_Setup.Server_"/api/ -user ""Token"" -pass """_Setup.Token_""""
-    $$$QuitOnError(##class(%ZPM.PackageManager).Shell(repoCommand))
+    If tIsLegacy {
+        $$$QuitOnError(##class(%ZPM.PackageManager).Shell(repoCommand))
+    } else {
+        $$$QuitOnError(##class(%IPM.Main).Shell(repoCommand))
+    }
     $$$QuitOnError(Setup.%Save(0))
     $$$QuitOnError(##class(ZPMHUB.Task).SendSingleEnvironment($znspace))
     quit $$$OK
@@ -131,7 +146,11 @@ ClassMethod GetSSLConfiguration() As %String
 
 ClassMethod CheckEmail(server As %String, email As %String) As %Boolean
 {
-    set config=##class(%ZPM.PackageManager.Client.REST.PackageManagerClient).%New()
+    If ..IsLegacy() {
+        set config=##class(%ZPM.PackageManager.Client.REST.PackageManagerClient).%New()
+    } else {
+        set config=##class(%IPM.Repo.Remote.PackageService).%New()
+    }
     set location=server_"api/auth/checkEmail/"_email
     Set tRequest = config.GetHttpRequest(location)
     
@@ -143,7 +162,11 @@ ClassMethod CheckEmail(server As %String, email As %String) As %Boolean
 
 ClassMethod CheckToken(server As %String, token As %String) As %Numeric
 {
-    set config=##class(%ZPM.PackageManager.Client.REST.PackageManagerClient).%New()
+    If ..IsLegacy() {
+        set config=##class(%ZPM.PackageManager.Client.REST.PackageManagerClient).%New()
+    } else {
+        set config=##class(%IPM.Repo.Remote.PackageService).%New()
+    }
     set config.Location=server_"api/auth/check"
     set config.Username="token"
     set config.Password=token
@@ -156,7 +179,11 @@ ClassMethod CheckToken(server As %String, token As %String) As %Numeric
 
 ClassMethod GetToken(server As %String, email As %String, password As %String) As %String
 {
-    set config=##class(%ZPM.PackageManager.Client.REST.PackageManagerClient).%New()
+    If ..IsLegacy() {
+        set config=##class(%ZPM.PackageManager.Client.REST.PackageManagerClient).%New()
+    } else {
+        set config=##class(%IPM.Repo.Remote.PackageService).%New()
+    }
     set config.Location=server_"api/auth/token"
     set config.Username=$tr(email,"@","%")
     set config.Password=password
@@ -173,7 +200,11 @@ ClassMethod GetToken(server As %String, email As %String, password As %String) A
 
 ClassMethod Register(server As %String, email As %String, password As %String, name, orgName, org) As %Status
 {
-    set config=##class(%ZPM.PackageManager.Client.REST.PackageManagerClient).%New()
+    If ..IsLegacy() {
+        set config=##class(%ZPM.PackageManager.Client.REST.PackageManagerClient).%New()
+    } else {
+        set config=##class(%IPM.Repo.Remote.PackageService).%New()
+    }
     set config.Location=server_"api/auth/sign-up"
 
     Set tRequest = config.GetHttpRequest()
